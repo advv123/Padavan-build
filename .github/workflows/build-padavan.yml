@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
@@ -17,13 +17,14 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo apt-get update
+        # 删除 python-docutils，改用 python3-docutils
         sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
-        cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
+        cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
 
     - name: 克隆源码
       run: |
-        git clone --depth=1 https://github.com/chongshengB/rt-n56u.git /opt/rt-n56u
+        git clone --depth=1 https://github.com/advv123/rt-n56u.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
@@ -33,16 +34,12 @@ jobs:
         TNAME: JDC-1-5.0
       run: |
         cd /opt/rt-n56u/trunk
-        if [ ! -f configs/templates/$TNAME.config ] ; then
-          echo "configs/templates/$TNAME.config not found "
-          exit 1
-        fi
         cp -f configs/templates/$TNAME.config .config
 
         ######################################################################
         # 极简配置：只保留 AdGuardHome
         ######################################################################
-        # 清理原有配置
+        # 清理原有功能配置
         sed -i '/CONFIG_FIRMWARE_INCLUDE_/d' .config
 
         # 只写入 AdGuardHome
