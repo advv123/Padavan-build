@@ -72,13 +72,7 @@ jobs:
         # WebUI 中文
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
 
-        ######################################################################
-        # 修复内核新增选项，避免 oldconfig 卡住
-        ######################################################################
-        echo "CONFIG_TXRX_STAT_SUPPORT=n" >> linux-3.4.x/.config || true
-        echo "CONFIG_EXT4_FS=y" >> linux-3.4.x/.config || true
-        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> linux-3.4.x/.config || true
-        yes "" | make oldconfig || true
+   
 
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
