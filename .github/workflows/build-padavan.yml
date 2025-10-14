@@ -28,6 +28,14 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
 
+    - name: 修复 Go 下载地址
+      run: |
+        cd /opt/rt-n56u/trunk/tools
+        # 替换旧的 go1.15.2 为 go1.20.14
+        sed -i 's#go1.15.2.linux-amd64.tar.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
+        # 替换下载源为官方 go.dev
+        sed -i 's#https://gomirrors.org/dl/go/#https://go.dev/dl/#g' Makefile
+
     - name: 编译固件
       env:
         TNAME: JDC-1
