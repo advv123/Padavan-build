@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04   # 建议改成 22.04，runner 更快更稳定
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
@@ -17,17 +17,24 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo apt-get update
-        # 删除 python-docutils，改用 python3-docutils
+        # 使用 python3-docutils 替代 python-docutils
         sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
         cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
 
     - name: 克隆源码
       run: |
-        git clone --depth=1 https://github.com/advv123/rt-n56u.git /opt/rt-n56u
+        git clone --depth=1 https://github.com/chongshengB/rt-n56u.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
+
+    - name: 修复 Go 下载地址
+      run: |
+        cd /opt/rt-n56u/trunk/tools
+        # 更新 Go 版本和下载源
+        sed -i 's#go1.15.2.linux-amd64.tar.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
+        sed -i 's#https://gomirrors.org/dl/go/#https://go.dev/dl/#g' Makefile
 
     - name: 编译固件
       env:
@@ -39,10 +46,7 @@ jobs:
         ######################################################################
         # 极简配置：只保留 AdGuardHome
         ######################################################################
-        # 清理原有功能配置
         sed -i '/CONFIG_FIRMWARE_INCLUDE_/d' .config
-
-        # 只写入 AdGuardHome
         echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_IPV6=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
