@@ -1,6 +1,6 @@
-name: Build Padavan (JDC-1 WiFi + USB + IPv6 + Firewall)
+name: Build Padavan (JDC-1 WiFi + USB + IPv6 + Firewall) - advv123
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
 
     - name: 初始化环境
       env:
@@ -21,22 +21,16 @@ jobs:
         cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
 
-    - name: 克隆源码
+    - name: 克隆源码 (advv123/rt-n56u)
       run: |
         git clone --depth=1 https://github.com/advv123/rt-n56u.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
 
-    - name: 修复 Go 下载地址
-      run: |
-        cd /opt/rt-n56u/trunk/tools
-        sed -i 's#go1.15.2.linux-amd64.tar.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
-        sed -i 's#https://gomirrors.org/dl/go/#https://go.dev/dl/#g' Makefile
-
     - name: 编译固件
       env:
-        TNAME: JDC-1-5.0
+        TNAME: JDC-1
       run: |
         cd /opt/rt-n56u/trunk
         cp -f configs/templates/$TNAME.config .config
@@ -44,9 +38,9 @@ jobs:
         ######################################################################
         # 配置：WiFi + USB + IPv6 + 防火墙
         ######################################################################
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_/d' .config
+        sed -i '/^CONFIG_FIRMWARE_INCLUDE_/d' .config
 
-        # WiFi 驱动（JDC-1 推荐组合）
+        # WiFi 驱动
         echo "CONFIG_FIRMWARE_WIFI2_DRIVER=4.1" >> .config
         echo "CONFIG_FIRMWARE_WIFI5_DRIVER=5.0.4.0" >> .config
 
@@ -71,9 +65,11 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
 
         ######################################################################
-        # 修复 TXRX_STAT_SUPPORT 新增选项，避免卡在 oldconfig
+        # 修复内核新增选项，避免 oldconfig 卡住
         ######################################################################
-        echo "CONFIG_TXRX_STAT_SUPPORT=n" >> .config
+        echo "CONFIG_TXRX_STAT_SUPPORT=n" >> linux-3.4.x/.config || true
+        echo "CONFIG_EXT4_FS=y" >> linux-3.4.x/.config || true
+        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> linux-3.4.x/.config || true
         yes "" | make oldconfig || true
 
         sudo ./clear_tree
@@ -83,5 +79,5 @@ jobs:
     - name: 上传固件
       uses: actions/upload-artifact@v4
       with:
-        name: Padavan-JDC1-WiFi-USB-IPv6-Firewall
+        name: Padavan-JDC1-advv123-WiFi-USB-IPv6-Firewall
         path: /opt/images/*.trx
