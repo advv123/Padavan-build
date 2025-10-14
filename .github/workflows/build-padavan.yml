@@ -71,7 +71,6 @@ jobs:
 
         # WebUI 中文
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
-        echo "CONFIG_TXRX_STAT_SUPPORT=n" >> .config
 
 
    
