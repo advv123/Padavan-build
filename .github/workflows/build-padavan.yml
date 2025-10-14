@@ -48,7 +48,7 @@ jobs:
         ######################################################################
         sed -i '/CONFIG_FIRMWARE_INCLUDE_/d' .config
         echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config
-        echo "CONFIG_FIRMWARE_ENABLE_IPV6=n" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_IPV6=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
 
         sudo ./clear_tree
