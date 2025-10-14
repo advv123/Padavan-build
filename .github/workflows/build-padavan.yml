@@ -23,7 +23,7 @@ jobs:
 
     - name: 克隆源码
       run: |
-        git clone --depth=1 https://github.com/chongshengB/rt-n56u.git /opt/rt-n56u
+        git clone --depth=1 https://github.com/advv123/rt-n56u.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
@@ -36,7 +36,7 @@ jobs:
 
     - name: 编译固件
       env:
-        TNAME: JDC-1
+        TNAME: JDC-1-5.0
       run: |
         cd /opt/rt-n56u/trunk
         cp -f configs/templates/$TNAME.config .config
@@ -69,6 +69,12 @@ jobs:
 
         # WebUI 中文
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
+
+        ######################################################################
+        # 修复 TXRX_STAT_SUPPORT 新增选项，避免卡在 oldconfig
+        ######################################################################
+        echo "CONFIG_TXRX_STAT_SUPPORT=n" >> .config
+        yes "" | make oldconfig || true
 
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
