@@ -58,7 +58,6 @@ jobs:
         echo "CONFIG_FIRMWARE_ENABLE_FUSE=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_FAT=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_EXFAT=y" >> .config
-        echo "CONFIG_FIRMWARE_ENABLE_EXT4=y" >> .config
 
         # IPv6
         echo "CONFIG_FIRMWARE_ENABLE_IPV6=y" >> .config
