@@ -72,6 +72,11 @@ jobs:
         # WebUI 中文
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> .config
 
+        # 强制写入 TXRX_STAT_SUPPORT，避免 oldconfig 卡住
+        echo "CONFIG_TXRX_STAT_SUPPORT=n" >> .config
+        yes "" | make oldconfig || true
+
+
 
    
 
