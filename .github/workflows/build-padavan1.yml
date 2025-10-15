@@ -67,6 +67,13 @@ jobs:
         exit 1
         fi
         cp -f configs/templates/$TNAME.config .config
+         # 确保内核配置文件存在并生成 auto.conf
+         cd linux-3.4.x
+         if [ ! -f .config ]; then
+         cp ../../configs/templates/$TNAME.config .config
+         fi
+         make oldconfig || true
+         cd ..
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
         ################################################################################################
         #因不同型号配置功能不一样，所以先把配置项删除，如果你自己要添加其他的，也要写上删除这一条，切记！！！
