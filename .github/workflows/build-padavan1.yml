@@ -70,7 +70,7 @@ jobs:
          # 确保内核配置文件存在并生成 auto.conf
          cd linux-3.4.x
          if [ ! -f .config ]; then
-         cp ../../configs/templates/$TNAME.config .config
+         cp -f configs/templates/$TNAME.config .config
          fi
          make oldconfig || true
          cd ..
