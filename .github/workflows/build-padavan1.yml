@@ -37,6 +37,16 @@ jobs:
           sh dl_toolchain.sh
           mkdir -p /opt/images/
 
+    - name: Prepare sing-box binary
+      run: |
+        mkdir -p /opt/rt-n56u/trunk/user/sing-box/prebuilt
+        SINGBOX_VERSION=1.12.10
+        wget https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-mipsle.tar.gz -O /tmp/sing-box.tar.gz
+        tar -xzf /tmp/sing-box.tar.gz -C /tmp
+        cp /tmp/sing-box-${SINGBOX_VERSION}-linux-mipsle/sing-box /opt/rt-n56u/trunk/user/sing-box/prebuilt/sing-box
+        chmod +x /opt/rt-n56u/trunk/user/sing-box/prebuilt/sing-box
+
+
     - name: 修复 Go 下载地址
       run: |
         cd /opt/rt-n56u/trunk/tools
