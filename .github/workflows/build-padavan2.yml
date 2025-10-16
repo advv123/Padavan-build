@@ -53,19 +53,27 @@ jobs:
 
           # 使用 JDC-1.config 模板
           cp -f configs/templates/JDC-1.config .config
-          
+          sed -i 's/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=y/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n/g' .config
+          sed -i 's/CONFIG_FIRMWARE_INCLUDE_MENTOHUST=y/CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n/g' .config
+          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=y/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n/g' .config
+          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SRELAY=y/CONFIG_FIRMWARE_INCLUDE_SRELAY=n/g' .config
+          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n/g' .config
 
-          # 用 scripts/config 修改配置（比 sed 更安全）
+          ##以下为插件增减选项,y为集成,n为不集成,请根据自己路由的FLASH大小选择,切勿超大小,不然固件刷入后会无法启动
+          ##此插件选项只在本地编译的时候才会生效
+          ##科学上网##
+          echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y" >> .config #科学上网插件，选择n后全部有关插件都不集成
+          echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=y" >> .config #集成v2ray执行文件，如果不集成，会从网上下载下来执行，不影响正常使用
+          echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=y" >> .config #simple-obfs混淆插件
           echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
           echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config #adg DNS去AD
+          echo "CONFIG_USB_USBNET=y" >> .config
+          echo "CONFIG_USB_NET_RNDIS_HOST=y" >> .config
+          echo "CONFIG_USB_NET_CDCETHER=y" >> .config
           echo "CONFIG_FIRMWARE_INCLUDE_USB_MODEM=y" >> .config
+          echo "CONFIG_USB_NET_CDC_NCM=y" >> .config
 
-
-
-          # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC
-          # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE
-          # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_CURL
-
+         
           # 打印前几行确认配置
           head -n 20 .config
 
