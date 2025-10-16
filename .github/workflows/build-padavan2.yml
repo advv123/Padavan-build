@@ -26,74 +26,39 @@ jobs:
             cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
             pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
 
-      - name: 克隆源码
+      - name: Clone source
         run: |
           git clone --depth=1 https://github.com/advv123/rt-n56u.git /opt/rt-n56u
           cd /opt/rt-n56u/toolchain-mipsel
           sh dl_toolchain.sh
           mkdir -p /opt/images/
 
-      - name: 修复 Go 下载地址
+      - name: Fix Go download
         run: |
           cd /opt/rt-n56u/trunk/tools
           sed -i 's#go1.15.2.linux-amd64.tar.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
           sed -i 's#https://gomirrors.org/dl/go/#https://go.dev/dl/#g' Makefile
 
+      - name: Configure firmware options
+        run: |
+          cd /opt/rt-n56u/trunk
+
+          # 使用 JDC-1.config 模板
+          cp -f configs/templates/JDC-1.config .config
+
+          # 用 scripts/config 修改配置（比 sed 更安全）
+          # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC
+          # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE
+          # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_CURL
+
+          # 打印前几行确认配置
+          head -n 20 .config
+
       - name: Build Firmware
         env:
           TNAME: JDC-1
-          KERNEL: 3.4
         run: |
           cd /opt/rt-n56u/trunk
-          # 确认模板文件存在
-          if [ ! -f configs/templates/$TNAME.config ]; then
-            cp $GITHUB_WORKSPACE/trunk/configs/templates/$TNAME.config configs/templates/
-          fi
-          # 复制模板到 .config
-          cp -f configs/templates/$TNAME.config .config
-
-          # 确保内核配置文件存在
-          cd linux-3.4.x
-          if [ ! -f .config ]; then
-            cp ../configs/templates/$TNAME.config .config
-          fi
-          make oldconfig || true
-          cd ..
-
-          # 强制启用 openssl 可执行文件
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
-
-          ######################################################################
-          # 删除不需要的配置项
-          ######################################################################
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_SSSERVER/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPC/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_TUNSAFE/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNS/d' .config
-          sed -i '/CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME/d' .config
-
-          ######################################################################
-          # 重新写入需要的功能（根据 JDC-1.config）
-          ######################################################################
-          echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_SSSERVER=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_FRPC=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_FRPS=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=n" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=n" >> .config
-
-          ######################################################################
-          # 编译固件
-          ######################################################################
           sudo ./clear_tree
           sudo ./build_firmware_modify $TNAME 0
           sudo mv -f images/*.trx /opt/images/
