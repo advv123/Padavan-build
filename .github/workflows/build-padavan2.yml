@@ -58,6 +58,7 @@ jobs:
           # 用 scripts/config 修改配置（比 sed 更安全）
           echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
           echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config #adg DNS去AD
+          echo "CONFIG_FIRMWARE_INCLUDE_USB_MODEM=y" >> .config
 
 
 
