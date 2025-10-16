@@ -1,83 +1,51 @@
-name: Build Padavan2
+name: Build Padavan Firmware for JDC-1
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-  release:
-    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Initialization environment
+      - name: Install dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
             cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
-            pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libssl-dev
+            pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget \
+            libssl-dev openssl
 
-      - name: Clone source
+      - name: Clone Padavan source
         run: |
           git clone --depth=1 https://github.com/advv123/rt-n56u.git /opt/rt-n56u
           cd /opt/rt-n56u/toolchain-mipsel
           sh dl_toolchain.sh
-          mkdir -p /opt/images/
-        
-      - name: Fix Go download
-        run: |
-          cd /opt/rt-n56u/trunk/tools
-          # 删除旧的 go 目录，避免缓存导致继续用 1.15.2
-          rm -rf go
 
-          # 替换 Makefile 里的 Go 版本和下载地址
-          sed -i 's#go1\.15\.2\.linux-amd64\.tar\.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
-          sed -i 's#https://gomirrors.org/dl/go/#https://go.dev/dl/#g' Makefile
-
-          # 确认修改结果
-          grep go Makefile
-
-
-      - name: Configure firmware options
+      - name: Modify firmware config
         run: |
           cd /opt/rt-n56u/trunk
-
-          # 使用 JDC-1.config 模板
-          cp -f configs/templates/JDC-1.config .config
+          echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
+          echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config
+          echo "CONFIG_USB_USBNET=y" >> .config
+          echo "CONFIG_USB_NET_RNDIS_HOST=y" >> .config
+          echo "CONFIG_USB_NET_CDCETHER=y" >> .config
+          echo "CONFIG_USB_NET_CDC_NCM=y" >> .config
+          echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> .config
+          echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> .config
+          echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n" >> .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=y/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n/g' .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_MENTOHUST=y/CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n/g' .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=y/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n/g' .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_SRELAY=y/CONFIG_FIRMWARE_INCLUDE_SRELAY=n/g' .config
           sed -i 's/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n/g' .config
 
-          ##以下为插件增减选项,y为集成,n为不集成,请根据自己路由的FLASH大小选择,切勿超大小,不然固件刷入后会无法启动
-          ##此插件选项只在本地编译的时候才会生效
-          ##科学上网##
-          echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y" >> .config #科学上网插件，选择n后全部有关插件都不集成
-          echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=y" >> .config #集成v2ray执行文件，如果不集成，会从网上下载下来执行，不影响正常使用
-          echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=y" >> .config #simple-obfs混淆插件
-          echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config #adg DNS去AD
-          echo "CONFIG_USB_USBNET=y" >> .config
-          echo "CONFIG_USB_NET_RNDIS_HOST=y" >> .config
-          echo "CONFIG_USB_NET_CDCETHER=y" >> .config
-          echo "CONFIG_FIRMWARE_INCLUDE_USB_MODEM=y" >> .config
-          echo "CONFIG_USB_NET_CDC_NCM=y" >> .config
-
-         
-          # 打印前几行确认配置
-          head -n 20 .config
-
-      - name: Build Firmware
+      - name: Build firmware
         env:
           TNAME: JDC-1
           PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
@@ -85,22 +53,14 @@ jobs:
           OPENSSL_CFLAGS: "-I/usr/include"
         run: |
           cd /opt/rt-n56u/trunk
-
-          # 第一次构建（含 fakeroot）
           fakeroot ./build_firmware_modify $TNAME
-
-          # 清理构建缓存
           sudo ./clear_tree
-
-          # 第二次构建（正式编译）
           sudo ./build_firmware_modify $TNAME 0
-
-          # 移动生成的固件
+          mkdir -p /opt/images
           sudo mv -f images/*.trx /opt/images/
 
-      - name: Upload packages
+      - name: Upload firmware
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: Padavan2-packages
-          path: /opt/images
+          name: JDC-1-firmware
+          path: /opt/images/*.trx
