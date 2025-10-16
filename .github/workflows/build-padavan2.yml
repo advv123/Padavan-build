@@ -53,8 +53,14 @@ jobs:
 
           # 使用 JDC-1.config 模板
           cp -f configs/templates/JDC-1.config .config
+          
 
           # 用 scripts/config 修改配置（比 sed 更安全）
+          echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
+          echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config #adg DNS去AD
+
+
+
           # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC
           # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE
           # scripts/config --enable CONFIG_FIRMWARE_INCLUDE_CURL
