@@ -36,8 +36,16 @@ jobs:
       - name: Fix Go download
         run: |
           cd /opt/rt-n56u/trunk/tools
-          sed -i 's#go1.15.2.linux-amd64.tar.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
+          # 删除旧的 go 目录，避免缓存导致继续用 1.15.2
+          rm -rf go
+
+          # 替换 Makefile 里的 Go 版本和下载地址
+          sed -i 's#go1\.15\.2\.linux-amd64\.tar\.gz#go1.20.14.linux-amd64.tar.gz#g' Makefile
           sed -i 's#https://gomirrors.org/dl/go/#https://go.dev/dl/#g' Makefile
+
+          # 确认修改结果
+          grep go Makefile
+
 
       - name: Configure firmware options
         run: |
