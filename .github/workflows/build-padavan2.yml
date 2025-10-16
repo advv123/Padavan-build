@@ -81,6 +81,7 @@ jobs:
         env:
           TNAME: JDC-1
         run: |
+          export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
           cd /opt/rt-n56u/trunk
           sudo ./clear_tree
           sudo ./build_firmware_modify $TNAME 0
