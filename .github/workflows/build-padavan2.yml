@@ -27,6 +27,15 @@ jobs:
           cd /opt/rt-n56u/toolchain-mipsel
           sh dl_toolchain.sh
 
+      - name: Patch AdGuardHome download
+        run: |
+          cd /opt/rt-n56u/trunk/tools
+          # 获取最新版本号
+          AGH_VER=$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | grep tag_name | cut -d '"' -f4)
+          AGH_URL="https://github.com/AdguardTeam/AdGuardHome/releases/download/${AGH_VER}/AdGuardHome_linux_mipsle.tar.gz"
+          echo "Downloading AdGuardHome from $AGH_URL"
+          wget -O AdGuardHome_linux_mipsle.tar.gz "$AGH_URL" || (echo "❌ 下载失败: $AGH_URL" && exit 1)
+
       - name: Modify firmware config
         run: |
           cd /opt/rt-n56u/trunk
@@ -39,13 +48,7 @@ jobs:
           echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> .config
           echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> .config
           echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n" >> .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=y/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_MENTOHUST=y/CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=y/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SRELAY=y/CONFIG_FIRMWARE_INCLUDE_SRELAY=n/g' .config
-          sed -i 's/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n/g' .config
-          cd /opt/rt-n56u/trunk/tools
-          wget -O AdGuardHome_linux_mipsle.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.67/AdGuardHome_linux_mipsle.tar.gz
+
       - name: Build firmware
         env:
           TNAME: JDC-1
