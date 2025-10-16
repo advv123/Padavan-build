@@ -80,11 +80,22 @@ jobs:
       - name: Build Firmware
         env:
           TNAME: JDC-1
+          PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
+          OPENSSL_LIBS: "-lssl -lcrypto"
+          OPENSSL_CFLAGS: "-I/usr/include"
         run: |
-          export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
           cd /opt/rt-n56u/trunk
+
+          # 第一次构建（含 fakeroot）
+          fakeroot ./build_firmware_modify $TNAME
+
+          # 清理构建缓存
           sudo ./clear_tree
+
+          # 第二次构建（正式编译）
           sudo ./build_firmware_modify $TNAME 0
+
+          # 移动生成的固件
           sudo mv -f images/*.trx /opt/images/
 
       - name: Upload packages
